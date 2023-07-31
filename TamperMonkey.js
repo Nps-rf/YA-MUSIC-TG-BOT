@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Yandex Music Track Collector
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  Collect current track from Yandex Music
 // @author       Nikolai Pikalov (https://github.com/Nps-rf)
 // @match        https://music.yandex.ru/*
@@ -22,12 +22,9 @@
         });
     }
 
-    function checkTrack() {
+    const checkTrack = () => {
         const currentTrack = externalAPI.getCurrentTrack();
-
-        if (currentTrack) {
-            sendTrackInfoToServer(currentTrack);
-        }
+        if (currentTrack && externalAPI.isPlaying()) sendTrackInfoToServer(currentTrack);
     }
 
     setInterval(checkTrack, 7000);
