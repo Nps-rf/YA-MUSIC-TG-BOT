@@ -1,32 +1,38 @@
 // ==UserScript==
 // @name         Yandex Music Track Collector
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  Collect current track from Yandex Music
 // @author       Nikolai Pikalov (https://github.com/Nps-rf)
 // @match        https://music.yandex.ru/*
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
+    const TIMEOUT = 5000;  // 5 seconds
+    const PROTOCOL = "https://";
+    const BACKEND_URL = "http://localhost:8080";
+    const ENDPOINT = "/set-last-track";
 
-    function sendTrackInfoToServer(track) {
-        GM_xmlhttpRequest({
-            method: "POST",
-            url: "http://localhost:8080/set-last-track",
-            data: JSON.stringify(track),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-    }
+    const method = "POST";
+    const headers = {"Content-Type": "application/json"}
+
+    const url = `${PROTOCOL}${BACKEND_URL}${ENDPOINT}`
+
+    const sendTrackInfoToServer = data => GM_xmlhttpRequest({
+        method,
+        url,
+        data,
+        headers,
+    });
+
 
     const checkTrack = () => {
         const currentTrack = externalAPI.getCurrentTrack();
-        if (currentTrack && externalAPI.isPlaying()) sendTrackInfoToServer(currentTrack);
+        (currentTrack && externalAPI.isPlaying()) && sendTrackInfoToServer(JSON.stringify(currentTrack));
     }
 
-    setInterval(checkTrack, 7000);
+    setInterval(checkTrack, TIMEOUT);
 })();
 
