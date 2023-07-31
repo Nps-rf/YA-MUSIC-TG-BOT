@@ -20,9 +20,17 @@ const (
 	YandexMusicBase string = "https://music.yandex.ru"
 )
 
-var mutex sync.Mutex
+var _ = godotenv.Load()
+var (
+	botToken      = os.Getenv("BOT_TOKEN")
+	ownerName     = os.Getenv("OWNER_NAME")
+	redisHost     = os.Getenv("REDIS_HOST")
+	redisPassword = os.Getenv("REDIS_PASSWORD")
+)
 
-var redisClient = redis.GetClient("localhost:6379", "") // TODO get from .env
+var redisClient = redis.GetClient(redisHost, redisPassword)
+
+var mutex sync.Mutex
 
 func formatTime(t string) (string, error) {
 	trackTime, err := time.Parse("2006-01-02T15:04:05", t)
@@ -59,8 +67,9 @@ func setLastTrackHandler(w http.ResponseWriter, r *http.Request) {
 
 	trackInfo.UpdateTime = time.Now().Format("2006-01-02T15:04:05")
 
+	var userId string = trackInfo.User.Id
 	mutex.Lock()
-	err = redis.SaveToRedis(redisClient, "nikolai_pikalov", trackInfo) // TODO
+	err = redis.SaveToRedis(redisClient, userId, trackInfo) // TODO
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,11 +79,12 @@ func setLastTrackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update, ownerName string) {
+	var userId = update.Message.From.ID
+
 	mutex.Lock()
-	track, err := redis.GetFromRedis(redisClient, "nikolai_pikalov") // TODO
+	track, err := redis.GetFromRedis(redisClient, userId) // TODO
 	if err != nil {
 		log.Fatal(err)
-		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Произошла ошибка :(")) // TODO
 	}
 	mutex.Unlock()
 
@@ -97,17 +107,6 @@ func sendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update, ownerName st
 }
 
 func main() {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	var (
-		botToken  = os.Getenv("BOT_TOKEN")
-		ownerName = os.Getenv("OWNER_NAME")
-		//redisPassword = os.Getenv("REDIS_PASSWORD")
-	)
-
 	bot, err := tgbotapi.NewBotAPI(botToken)
 
 	if err != nil {

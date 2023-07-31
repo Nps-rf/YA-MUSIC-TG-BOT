@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/types"
 	"github.com/redis/go-redis/v9"
+	"strconv"
 )
 
 func GetClient(Addr string, Password string) *redis.Client {
@@ -15,7 +16,7 @@ func GetClient(Addr string, Password string) *redis.Client {
 	})
 }
 
-func SaveToRedis(client *redis.Client, key string, track types.TrackInfo) error {
+func SaveToRedis(client *redis.Client, key int, track types.TrackInfo) error {
 	ctx := context.Background()
 
 	jsonData, err := json.Marshal(track)
@@ -23,17 +24,17 @@ func SaveToRedis(client *redis.Client, key string, track types.TrackInfo) error 
 		return err
 	}
 
-	err = client.Set(ctx, key, jsonData, 0).Err()
+	err = client.Set(ctx, strconv.Itoa(key), jsonData, 0).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetFromRedis(client *redis.Client, key string) (types.TrackInfo, error) {
+func GetFromRedis(client *redis.Client, key int) (types.TrackInfo, error) {
 	ctx := context.Background()
 
-	data, err := client.Get(ctx, key).Result()
+	data, err := client.Get(ctx, strconv.Itoa(key)).Result()
 	if err != nil {
 		return types.TrackInfo{}, err
 	}
