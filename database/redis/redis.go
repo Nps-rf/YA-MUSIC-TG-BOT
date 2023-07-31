@@ -8,15 +8,15 @@ import (
 	"strconv"
 )
 
-func GetClient(Addr string, Password string) *redis.Client {
+func GetClient(Addr string, Password string, DB int) *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     Addr,
 		Password: Password, // no password set
-		DB:       0,        // use default DB // TODO
+		DB:       DB,       // use default DB // TODO
 	})
 }
 
-func SaveToRedis(client *redis.Client, key int, track types.TrackInfo) error {
+func SaveToRedis(client *redis.Client, key string, track types.TrackInfo) error {
 	ctx := context.Background()
 
 	jsonData, err := json.Marshal(track)
@@ -24,7 +24,7 @@ func SaveToRedis(client *redis.Client, key int, track types.TrackInfo) error {
 		return err
 	}
 
-	err = client.Set(ctx, strconv.Itoa(key), jsonData, 0).Err()
+	err = client.Set(ctx, key, jsonData, 0).Err()
 	if err != nil {
 		return err
 	}

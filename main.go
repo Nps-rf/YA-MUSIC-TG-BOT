@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -26,9 +27,10 @@ var (
 	ownerName     = os.Getenv("OWNER_NAME")
 	redisHost     = os.Getenv("REDIS_HOST")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
+	redisDB, _    = strconv.Atoi(os.Getenv("REDIS_DB")) // TODO: Вероятно не самое лучшее решение, но что поделать
 )
 
-var redisClient = redis.GetClient(redisHost, redisPassword)
+var redisClient = redis.GetClient(redisHost, redisPassword, redisDB)
 
 var mutex sync.Mutex
 
@@ -67,7 +69,7 @@ func setLastTrackHandler(w http.ResponseWriter, r *http.Request) {
 
 	trackInfo.UpdateTime = time.Now().Format("2006-01-02T15:04:05")
 
-	var userId string = trackInfo.User.Id
+	var userId = trackInfo.User.Id
 	mutex.Lock()
 	err = redis.SaveToRedis(redisClient, userId, trackInfo) // TODO
 	if err != nil {
@@ -99,11 +101,19 @@ func sendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update, ownerName st
 	trackTime, _ := formatTime(track.UpdateTime)
 	textMsg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%s\nСейчас слушает: %s\nИсполнитель: %s\nПоследний раз: %s", ownerName, trackName, artistsText, trackTime))
 	textMsg.ParseMode = "HTML"
-	bot.Send(textMsg)
+	_, err = bot.Send(textMsg)
+	if err != nil {
+		log.Panic(err)
+		return
+	}
 
 	// Отправка изображения
 	photoMsg := tgbotapi.NewPhotoShare(update.Message.Chat.ID, strings.ReplaceAll(track.Image, "%%", "300x300"))
-	bot.Send(photoMsg)
+	_, err = bot.Send(photoMsg)
+	if err != nil {
+		log.Panic(err)
+		return
+	}
 }
 
 func main() {
