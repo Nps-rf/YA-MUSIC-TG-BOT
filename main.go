@@ -34,7 +34,7 @@ var redisClient = redis.GetClient(redisHost, redisPassword, redisDB)
 
 var mutex sync.Mutex
 
-func formatTime(t string) (string, error) {
+func FormatTime(t string) (string, error) {
 	trackTime, err := time.Parse("2006-01-02T15:04:05", t)
 	if err != nil {
 		return "", err
@@ -98,7 +98,7 @@ func sendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update, ownerName st
 
 	artistsText = strings.TrimSuffix(artistsText, ", ")
 	trackName := fmt.Sprintf("<a href='%s%s'>%s</a>", YandexMusicBase, track.Link, track.Title)
-	trackTime, _ := formatTime(track.UpdateTime)
+	trackTime, _ := FormatTime(track.UpdateTime)
 	textMsg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%s\nСейчас слушает: %s\nИсполнитель: %s\nПоследний раз: %s", ownerName, trackName, artistsText, trackTime))
 	textMsg.ParseMode = "HTML"
 	_, err = bot.Send(textMsg)
