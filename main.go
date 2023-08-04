@@ -1,13 +1,12 @@
 package main
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/joho/godotenv"
-	"github.com/nps-rf/YA-MUSIC-TG-BOT/callbackHandlers"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/nps-rf/YA-MUSIC-TG-BOT/class"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/events"
-	"github.com/nps-rf/YA-MUSIC-TG-BOT/messageHandlers"
-	"log"
-	"net/http"
+	"github.com/nps-rf/YA-MUSIC-TG-BOT/types"
 	"os"
 )
 
@@ -18,45 +17,26 @@ var (
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI(botToken)
-
-	if err != nil {
-		log.Panic(err)
+	cfg := types.BotConfig{
+		Token:   botToken,
+		Debug:   false,
+		Timeout: 60,
 	}
 
-	bot.Debug = true
-
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates, err := bot.GetUpdatesChan(u)
-
-	f := func() {
-		for update := range updates {
-			if update.Message == nil {
-				continue
-			}
-
-			if err != nil {
-				println(err)
-				continue
-			}
-
-			if messageHandlers.CommandsHandler(bot, update) {
-				continue
-			} else if update.CallbackQuery != nil {
-				callbackHandlers.CallbackHandler(bot, update)
-
-			} else {
-				events.SendCurrentTrack(bot, update)
-			}
-		}
+	bot := class.Bot{
+		Config: cfg,
 	}
-	go f()
 
-	http.HandleFunc("/set-last-track", events.SetLastTrackHandler)
+	bot.Init()
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	go bot.StartPolling()
+
+	e := echo.New()
+
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.POST("/set-last-track", events.SetLastTrack)
+
+	e.Start(":8080")
 }

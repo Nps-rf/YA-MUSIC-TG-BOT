@@ -18,3 +18,9 @@ type TrackInfo struct {
 	Link       string       `json:"link"`
 	UpdateTime string
 }
+
+type BotConfig struct {
+	Token   string
+	Debug   bool
+	Timeout int
+}

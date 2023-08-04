@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/labstack/echo/v4"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/consts"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/database/redis"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/types"
@@ -38,10 +39,7 @@ func SendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	mutex.Lock()
 	track, err := redis.GetFromRedis(redisClient, userId)
 	if err != nil {
-		warnMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "Для вас нет трека!")
-		_, err = bot.Send(warnMessage)
-		mutex.Unlock()
-		return
+		log.Panic(err)
 	}
 	mutex.Unlock()
 
@@ -59,7 +57,6 @@ func SendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	_, err = bot.Send(textMsg)
 	if err != nil {
 		log.Panic(err)
-		return
 	}
 
 	// Отправка изображения
@@ -67,34 +64,31 @@ func SendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	_, err = bot.Send(photoMsg)
 	if err != nil {
 		log.Panic(err)
-		return
 	}
 }
 
-func SetLastTrackHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		return
+func SetLastTrack(c echo.Context) error {
+	var trackInfo types.TrackInfo
+
+	if err := json.NewDecoder(c.Request().Body).Decode(&trackInfo); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	var trackInfo types.TrackInfo
-	err := decoder.Decode(&trackInfo)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
+	defer c.Request().Body.Close()
 
 	trackInfo.UpdateTime = time.Now().Format("2006-01-02T15:04:05")
 
 	var userId = "580157064" // TODO
+
 	mutex.Lock()
-	err = redis.SaveToRedis(redisClient, userId, trackInfo) // TODO
-	if err != nil {
-		log.Fatal(err)
-	}
+	err := redis.SaveToRedis(redisClient, userId, trackInfo) // TODO
 	mutex.Unlock()
 
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		log.Panic(err)
+	}
+
 	fmt.Printf("TrackInfo: %+v\n", trackInfo)
+	return c.JSON(http.StatusOK, trackInfo)
 }
