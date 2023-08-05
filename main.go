@@ -7,19 +7,38 @@ import (
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/class"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/events"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/types"
+	"log"
 	"os"
 )
 
 var _ = godotenv.Load()
 
 var (
-	botToken = os.Getenv("BOT_TOKEN")
+	env = os.Getenv("ENV")
 )
 
 func main() {
+
+	if "" == env {
+		env = "development"
+	}
+
+	err := godotenv.Load(".env." + env)
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	var Debug bool
+
+	if env == "development" {
+		Debug = true
+	} else {
+		Debug = false
+	}
+
 	cfg := types.BotConfig{
-		Token:   botToken,
-		Debug:   false,
+		Token:   os.Getenv("BOT_TOKEN"),
+		Debug:   Debug,
 		Timeout: 60,
 	}
 
