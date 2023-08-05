@@ -40,7 +40,7 @@
 
 1️⃣ **The userscript runs on Yandex Music web pages (as defined by the `@match` metadata).**
 
-2️⃣ **It checks for the currently playing track every 7 seconds, as set by `setInterval(checkTrack, 7000)`.**
+2️⃣ **It checks for the currently playing track every 5 seconds (`const TIMEOUT = 5000`), as set by `setInterval(checkTrack, INTERVAL)`.**
 
 3️⃣ **If a track is currently playing, it sends the track information to the server using the `GM_xmlhttpRequest` function. The server URL is "http://localhost:8080/set-last-track" (currently), and the track information is sent as JSON data in the request body.**
 
