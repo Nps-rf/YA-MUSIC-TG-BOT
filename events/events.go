@@ -58,37 +58,27 @@ func SendCurrentTrack(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	if err != nil {
 		log.Panic(err)
 	}
-
-	// Отправка изображения
-	photoMsg := tgbotapi.NewPhotoShare(update.Message.Chat.ID, strings.ReplaceAll(track.Image, "%%", "300x300"))
-	_, err = bot.Send(photoMsg)
-	if err != nil {
-		log.Panic(err)
-	}
 }
 
 func SetLastTrack(c echo.Context) error {
-	var trackInfo types.TrackInfo
+	var requestData types.RequestData
 
-	if err := json.NewDecoder(c.Request().Body).Decode(&trackInfo); err != nil {
+	if err := json.NewDecoder(c.Request().Body).Decode(&requestData); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
-
 	defer c.Request().Body.Close()
 
-	trackInfo.UpdateTime = time.Now().Format("2006-01-02T15:04:05")
-
-	var userId = "580157064" // TODO
+	requestData.TrackInfo.UpdateTime = time.Now().Format("2006-01-02T15:04:05")
 
 	mutex.Lock()
-	err := redis.SaveToRedis(redisClient, userId, trackInfo) // TODO
+	err := redis.SaveToRedis(redisClient, requestData.UserInfo.Id, requestData.TrackInfo) // TODO
 	mutex.Unlock()
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		_ = c.JSON(http.StatusInternalServerError, err.Error())
 		log.Panic(err)
 	}
 
-	fmt.Printf("TrackInfo: %+v\n", trackInfo)
-	return c.JSON(http.StatusOK, trackInfo)
+	fmt.Printf("TrackInfo: %+v\n", requestData)
+	return c.JSON(http.StatusOK, requestData)
 }
