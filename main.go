@@ -57,5 +57,8 @@ func main() {
 
 	e.POST("/set-last-track", events.SetLastTrack)
 
-	e.Start(":8080")
+	err = e.Start(os.Getenv("APP_PORT"))
+	if err != nil {
+		panic(err)
+	}
 }
