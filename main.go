@@ -1,40 +1,22 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/class"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/events"
 	"github.com/nps-rf/YA-MUSIC-TG-BOT/types"
-	"log"
 	"os"
 )
 
-var _ = godotenv.Load()
-
-var (
-	env = os.Getenv("ENV")
-)
-
 func main() {
-
-	if "" == env {
-		env = "development"
-	}
-
-	err := godotenv.Load(".env." + env)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	var Debug bool
 
-	if env == "development" {
-		Debug = true
-	} else {
-		Debug = false
-	}
+	//if os.Getenv('ENV') == "development" {
+	//	Debug = true
+	//} else {
+	//	Debug = false
+	//}
 
 	cfg := types.BotConfig{
 		Token:   os.Getenv("BOT_TOKEN"),
@@ -57,7 +39,7 @@ func main() {
 
 	e.POST("/set-last-track", events.SetLastTrack)
 
-	err = e.Start(os.Getenv("APP_PORT"))
+	err := e.Start(":" + os.Getenv("APP_PORT"))
 	if err != nil {
 		panic(err)
 	}

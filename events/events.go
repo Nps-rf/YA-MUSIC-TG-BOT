@@ -20,11 +20,13 @@ import (
 
 var (
 	redisHost     = os.Getenv("REDIS_HOST")
+	redisPort     = os.Getenv("REDIS_PORT")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
 	redisDB, _    = strconv.Atoi(os.Getenv("REDIS_DB")) // TODO: Вероятно не самое лучшее решение, но что поделать
 )
 
-var redisClient = redis.GetClient(redisHost, redisPassword, redisDB)
+var redisFullHostName = fmt.Sprintf("%s:%s", redisHost, redisPort)
+var redisClient = redis.GetClient(redisFullHostName, redisPassword, redisDB)
 
 var mutex sync.Mutex
 
