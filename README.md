@@ -9,7 +9,6 @@
 ### Dependencies 📚
 
 - **The Go [telegram-bot-api](https://github.com/go-telegram-bot-api/telegram-bot-api) for interaction with the Telegram Bot API.**
-- **The Go [godotenv](https://github.com/joho/godotenv) to load environment variables from a `.env` file.**
 - **[Echo framework](https://github.com/labstack/echo/v4) for creating a web server and handling HTTP requests.**
 - **Standard Go libraries: `encoding/json`, `fmt`, `log`, `net/http`, `os`, `strings`, and `sync`.**
 - **The Go [redis](https://github.com/redis/go-redis) library for interacting with Redis.**
@@ -18,13 +17,31 @@
 
 1️⃣ **The application loads the environment variables from a `.env` file which include the bot token and the owner's name.**
 
-2️⃣ **Depending on the environment variable "ENV", it loads corresponding environment variables from a `.env.{ENV}` file. If no "ENV" is specified, it defaults to "development".**
 
 3️⃣ **It then initializes the Telegram bot using the provided token.**
 
 4️⃣ **Upon receiving a new message in the chat, the bot responds with a message containing information about the last track (claiming it from redis storage) that was set via the `/set-last-track` HTTP endpoint. It sends two messages: one with the track details (title and artists) and another with the track's cover image.**
 
 5️⃣ **The track information is updated by sending a HTTP POST request with JSON data to the `/set-last-track` endpoint (setting value to the redis by userId as Key).**
+
+
+### Getting started 🚀
+
+#### 🐋 Using Docker
+
+1️⃣ **Fill the `.env` file with variables listed in `example.env`.**
+
+2️⃣ **Start the docker image using the command `docker-compose up`.**
+
+#### 🐟 Using the CLI (No longer supported)
+
+1️⃣ ~~**Fill the `.env` file with variables listed in `example.env`.**~~
+
+2️⃣ ~~**Install the required dependencies using the command `go mod download`.**~~
+
+3️⃣ ~~**Start your redis server using the command** `redis-server`.~~
+
+4️⃣ ~~**Start the bot using the command `go run main.go`.**~~
 
 ---
 
@@ -42,7 +59,7 @@
 
 2️⃣ **It checks for the currently playing track every 5 seconds (`const TIMEOUT = 5000`), as set by `setInterval(checkTrack, INTERVAL)`.**
 
-3️⃣ **If a track is currently playing, it sends the track information to the server using the `GM_xmlhttpRequest` function. The server URL is "http://localhost:8080/set-last-track" (currently), and the track information is sent as JSON data in the request body.**
+3️⃣ **If a track is currently playing, it sends the track information to the server using the `GM_xmlhttpRequest` function. The server URL is "http://localhost:<your_port>/set-last-track" (currently), and the track information is sent as JSON data in the request body.**
 
 4️⃣ **The track information sent includes the title, artists, cover image URL, and track URL, which the server can then use to update the `lastTrackInfo` variable.**
 
