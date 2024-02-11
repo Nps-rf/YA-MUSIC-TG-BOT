@@ -3,7 +3,8 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      args:
+        - GO_VERSION=1.19
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
@@ -17,3 +18,9 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     env_file:
       - .env
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+
